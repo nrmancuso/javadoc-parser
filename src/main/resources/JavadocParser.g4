@@ -84,6 +84,7 @@ description : (TEXT | NEWLINE |inlineTag)+ ;
 
 htmlElement
     : voidElement
+    | selfClosingElement
     | normalElement
     ;
 
@@ -92,11 +93,18 @@ voidElement
     ;
 
 normalElement
-    : htmlTagStart htmlContent htmlTagEnd
+    : {System.out.println();}
+      htmlTagStart htmlContent htmlTagEnd #tight
+    | htmlTagStart htmlContent            #nonTight
+    ;
+
+
+selfClosingElement
+    : TAG_OPEN TAG_NAME (htmlAttribute)* TAG_SLASH_CLOSE
     ;
 
 htmlTagStart
-    : TAG_OPEN TAG_NAME (htmlAttribute)* (TAG_SLASH_CLOSE | TAG_CLOSE)
+    : TAG_OPEN TAG_NAME (htmlAttribute)* TAG_CLOSE
     ;
 
 htmlTagEnd

@@ -207,6 +207,14 @@ public class AstPrinter {
 
     public static ParseDetails createAstString(String filename) {
         try {
+
+            // We have three possible ways to do this:
+            // 1. Purely in the parser; if we match the non-tight rule,
+            //  we don't nest the nodes in the AST.
+            // 2. Lex twice and use the list of non-tight tokens in the
+            //  parser
+            // 3. Lex once and just use the rule alts to determine
+            //   how to build the AST
             CharStream codePointCharStream = CharStreams.fromFileName(filename);
             JavadocLexer lexer = new JavadocLexer(codePointCharStream);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
