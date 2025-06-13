@@ -102,18 +102,13 @@ customBlockTag: CUSTOM_NAME description;
 
 description : (TEXT | NEWLINE |inlineTag)+ ;
 
-mainDescription: (NEWLINE | TEXT | inlineTag | htmlElementList)*;
-
-htmlElementList
-    : htmlElementList htmlElement
-    | htmlElement
-    ;
+mainDescription: (NEWLINE | TEXT | inlineTag | htmlElement)*;
 
 htmlElement
     : voidElement
+    | selfClosingElement
     | {!isNonTightTag()}? tight
     | {isNonTightTag()}? nonTight
-    | selfClosingElement
     ;
 
 voidElement
@@ -123,7 +118,6 @@ voidElement
 
 tight: htmlTagStart htmlContent htmlTagEnd;
 nonTight: htmlTagStart nonTightHtmlContent;
-
 
 selfClosingElement
     : TAG_OPEN TAG_NAME (htmlAttribute)* TAG_SLASH_CLOSE
@@ -138,7 +132,7 @@ htmlTagEnd
     ;
 
 htmlAttribute
-    : TAG_NAME (TAG_EQUALS ATTRIBUTE_VALUE)?
+    : TAG_ATTR_NAME (TAG_EQUALS ATTRIBUTE_VALUE)?
     ;
 
 htmlContent

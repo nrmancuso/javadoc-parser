@@ -8,8 +8,9 @@ tokens {
     JAVADOC, LEADING_ASTERISK, NEWLINE, TEXT, WS, JAVADOC_INLINE_TAG_START, JAVADOC_INLINE_TAG_END,
     CODE_LITERAL, LINK_LITERAL, IDENTIFIER, DOT, HASH, LPAREN, RPAREN, COMMA, LINKPLAIN_LITERAL,
     AUTHOR_LITERAL, DEPRECATED_LITERAL, RETURN_LITERAL, PARAM_LITERAL, TAG_OPEN, TAG_CLOSE, TAG_SLASH_CLOSE,
-    TAG_SLASH, TAG_EQUALS, TAG_NAME, ATTRIBUTE_VALUE
+    TAG_SLASH, TAG_EQUALS, TAG_NAME, ATTRIBUTE_VALUE, TAG_ATTR_NAME
 }
+
 
 @header {
 import java.util.ArrayDeque;
@@ -27,6 +28,7 @@ import org.antlr.v4.runtime.Token;
     private Token previousToken = null;
     private boolean afterNewline = true;
     private boolean isJavadocTag = true;
+    private boolean hasSeenTagName = false;
 
     public boolean isAfterNewline() {
         return afterNewline;
@@ -62,6 +64,8 @@ import org.antlr.v4.runtime.Token;
         if (token.getType() == TAG_NAME) {
             if (isOpenTagName(token)) {
                 openTagNameTokens.push(token);
+            } else if (isSelfClosing()) {
+              // do nothing
             } else {
                 closeTagNameTokens.push(token);
             }
@@ -76,38 +80,47 @@ import org.antlr.v4.runtime.Token;
     private final Deque<Token> openTagNameTokens = new ArrayDeque<>();
     private final Deque<Token> closeTagNameTokens = new ArrayDeque<>();
 
-    public List<Token> getUnclosedTagNameTokens() {
-        final List<Token> unmatched = new ArrayList<>();
+public List<Token> getUnclosedTagNameTokens() {
+    final List<Token> unmatched = new ArrayList<>();
+    final Deque<Token> unmatchedOpen = new ArrayDeque<>(openTagNameTokens); // copy
 
-        while (!closeTagNameTokens.isEmpty()) {
-            final Token closingTag = closeTagNameTokens.pop();
+    for (Token closingTag : closeTagNameTokens) {
+        Deque<Token> tempStack = new ArrayDeque<>();
+        boolean matched = false;
 
-            while (!openTagNameTokens.isEmpty()) {
-                final Token openingTag = openTagNameTokens.peek();
-                if (openingTag.getText().equals(closingTag.getText())) {
-                    // matched, discard both
-                    openTagNameTokens.pop();
-                    break;
-                }
-
-                // unmatched opening tag
-                unmatched.add(openTagNameTokens.pop());
+        while (!unmatchedOpen.isEmpty()) {
+            Token openingTag = unmatchedOpen.pop();
+            if (openingTag.getText().equalsIgnoreCase(closingTag.getText())) {
+                matched = true;
+                break;
+            } else {
+                tempStack.push(openingTag);
             }
         }
 
-        // Any remaining open tags are unmatched too
-        while (!openTagNameTokens.isEmpty()) {
-            unmatched.add(openTagNameTokens.pop());
+        // Put unmatched tags back
+        while (!tempStack.isEmpty()) {
+            unmatchedOpen.push(tempStack.pop());
         }
 
-        // Reverse to restore original order
-        Collections.reverse(unmatched);
-        return Collections.unmodifiableList(unmatched);
+        if (!matched) {
+            // Optional: You could track unmatched closing tags too
+        }
     }
+
+    // What remains are truly unmatched opening tags
+    unmatched.addAll(unmatchedOpen);
+    Collections.reverse(unmatched);
+    return Collections.unmodifiableList(unmatched);
+}
 
 
     private boolean isOpenTagName(Token token) {
         return previousToken == null || previousToken.getType() != TAG_SLASH;
+    }
+
+    private boolean isSelfClosing() {
+      return _input.LA(1) == TAG_SLASH_CLOSE;
     }
 
 }
@@ -226,11 +239,12 @@ Param_WS: [ \t]+ -> type(WS), channel(WHITESPACES);
 
 mode tag;
 
-TAG_CLOSE: '>' -> popMode;
-TAG_SLASH_CLOSE: '/>' -> popMode;
+TAG_CLOSE: '>' {hasSeenTagName = false;} -> popMode;
+TAG_SLASH_CLOSE: '/>' {hasSeenTagName = false;} -> popMode;
 TAG_SLASH: '/';
 TAG_EQUALS: '=' -> pushMode(attrValue);
-TAG_NAME: TagNameStartChar TagNameChar*;
+TAG_NAME: {hasSeenTagName == false}? TagNameStartChar TagNameChar* {hasSeenTagName = true;};
+TAG_ATTR_NAME: {hasSeenTagName == true}? TagNameStartChar TagNameChar*;
 Tag_NEWLINE
     : '\r'? '\n' {setAfterNewline();} -> pushMode(startOfLine), type(NEWLINE)
     ;
