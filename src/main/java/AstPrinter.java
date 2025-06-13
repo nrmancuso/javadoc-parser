@@ -205,17 +205,27 @@ public class AstPrinter {
         return ast.toString();
     }
 
-    public static String createAstString(String filename) {
+    public static ParseDetails createAstString(String filename) {
         try {
             CharStream codePointCharStream = CharStreams.fromFileName(filename);
             JavadocLexer lexer = new JavadocLexer(codePointCharStream);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
-            JavadocParser parser = new JavadocParser(tokens);
+
+            // Force full lexing *before* parsing starts
+            // ensures lexer emits all tokens and populates internal state
+            tokens.fill();
+
+            final List<Token> unclosed = lexer.getUnclosedTagNameTokens();
+            JavadocParser parser = new JavadocParser(tokens, unclosed);
+
             ParseTree tree = parser.javadoc();
-            return createAstString(tree);
+            return new ParseDetails(createAstString(tree), unclosed);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return "";
+        return new ParseDetails("", List.of());
     }
+
+    public record ParseDetails(String ast, List<Token> nonTightTags) {}
+
 }

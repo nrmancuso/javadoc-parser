@@ -11,6 +11,17 @@ tokens {
     TAG_SLASH, TAG_EQUALS, TAG_NAME, ATTRIBUTE_VALUE
 }
 
+@header {
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.List;
+
+import org.antlr.v4.runtime.Token;
+}
+
+
 @lexer::members {
     private int previousTokenType = 0;
     private Token previousToken = null;
@@ -45,27 +56,60 @@ tokens {
                         && nextChar == '@';
     }
 
-//    public int nextNonWhitespaceChar() {
-//        int offset = 1;
-//        int la;
-//        while (true) {
-//            la = _input.LA(offset);
-//            if (!Character.isWhitespace(la)) {
-//                return la;
-//            }
-//            offset++;
-//        }
-//    }
-
     @Override
     public void emit(Token token) {
         super.emit(token);
+        if (token.getType() == TAG_NAME) {
+            if (isOpenTagName(token)) {
+                openTagNameTokens.push(token);
+            } else {
+                closeTagNameTokens.push(token);
+            }
+        }
         previousTokenType = token.getType();
         previousToken = token;
         if (previousTokenType != NEWLINE) {
             afterNewline = false;
         }
     }
+
+    private final Deque<Token> openTagNameTokens = new ArrayDeque<>();
+    private final Deque<Token> closeTagNameTokens = new ArrayDeque<>();
+
+    public List<Token> getUnclosedTagNameTokens() {
+        final List<Token> unmatched = new ArrayList<>();
+
+        while (!closeTagNameTokens.isEmpty()) {
+            final Token closingTag = closeTagNameTokens.pop();
+
+            while (!openTagNameTokens.isEmpty()) {
+                final Token openingTag = openTagNameTokens.peek();
+                if (openingTag.getText().equals(closingTag.getText())) {
+                    // matched, discard both
+                    openTagNameTokens.pop();
+                    break;
+                }
+
+                // unmatched opening tag
+                unmatched.add(openTagNameTokens.pop());
+            }
+        }
+
+        // Any remaining open tags are unmatched too
+        while (!openTagNameTokens.isEmpty()) {
+            unmatched.add(openTagNameTokens.pop());
+        }
+
+        // Reverse to restore original order
+        Collections.reverse(unmatched);
+        return Collections.unmodifiableList(unmatched);
+    }
+
+
+    private boolean isOpenTagName(Token token) {
+        return previousToken == null || previousToken.getType() != TAG_SLASH;
+    }
+
 }
 
 LEADING_ASTERISK
