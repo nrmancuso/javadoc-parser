@@ -1,6 +1,13 @@
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CommonToken;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.TokenSource;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 public class AstTest extends AbstractTestSupport {
     @Override
@@ -83,9 +90,32 @@ public class AstTest extends AbstractTestSupport {
         verifyAst(getPath("htmlVoidTags1.txt"), getPath("htmlVoidTags1.javadoc"));
     }
 
-    // TODO: Handle non-tight html tags
     @Test
     public void testNonTightTags() throws IOException {
-        verifyAst(getPath("htmlNonTight1.txt"), getPath("htmlNonTight1.javadoc"));
+        final List<Token> expectedNonTightTags = List.of(
+                getTagNameToken(7, 43, "p", 2, 3),
+                getTagNameToken(29, 118, "li", 7, 5),
+                getTagNameToken(36, 138, "li", 8, 5)
+
+        );
+        verifyAst(getPath("htmlNonTight1.txt"), getPath("htmlNonTight1.javadoc"), expectedNonTightTags);
     }
+
+    private static Token getTagNameToken(
+            int tokenIndex,
+            int startIndex,
+            String text,
+            int line,
+            int charPositionInLine)  {
+        final CommonToken t = new CommonToken(JavadocLexer.TAG_NAME);
+        t.setLine(line);
+        t.setCharPositionInLine(charPositionInLine);
+        t.setText(text);
+        t.setStartIndex(startIndex);
+        t.setStopIndex(startIndex + text.length() -1);
+        t.setTokenIndex(tokenIndex);
+        return t;
+    }
+
+
 }

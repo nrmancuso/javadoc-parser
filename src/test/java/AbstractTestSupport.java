@@ -1,7 +1,13 @@
+import org.antlr.v4.runtime.CommonToken;
+import org.antlr.v4.runtime.Token;
+import org.junit.jupiter.api.Assertions;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -14,12 +20,39 @@ public abstract class AbstractTestSupport {
 
     protected static void verifyAst(String expectedAstPrintFilename, String actualJavadocFilename) throws IOException {
         final String expectedContents = readFile(expectedAstPrintFilename);
-        final String actualContents = toLfLineEnding(AstPrinter.createAstString(actualJavadocFilename));
+        final AstPrinter.ParseDetails parseDetails = AstPrinter.createAstString(actualJavadocFilename);
+        final String actualContents = toLfLineEnding(parseDetails.ast());
 
         assertEquals(expectedContents, actualContents,
             "Generated AST should match AST from printed text file.");
-
     }
+
+    protected static void verifyAst(String expectedAstPrintFilename, String actualJavadocFilename, List<Token> expectedNonTightTags) throws IOException {
+        final String expectedContents = readFile(expectedAstPrintFilename);
+        final AstPrinter.ParseDetails parseDetails = AstPrinter.createAstString(actualJavadocFilename);
+        final String actualContents = toLfLineEnding(parseDetails.ast());
+        assertTokensEqual(expectedNonTightTags, parseDetails.nonTightTags());
+
+        assertEquals(expectedContents, actualContents,
+                "Generated AST should match AST from printed text file.");
+    }
+
+    private static void assertTokensEqual(List<? extends Token> expected, List<? extends Token> actual) {
+        assertEquals(expected.size(), actual.size(), "Token list size mismatch");
+        for (int i = 0; i < expected.size(); i++) {
+            Token e = expected.get(i);
+            Token a = actual.get(i);
+            assertEquals(e.getType(), a.getType(), "Token type mismatch at index " + i);
+            assertEquals(e.getText(), a.getText(), "Token text mismatch at index " + i);
+            assertEquals(e.getLine(), a.getLine(), "Token line mismatch at index " + i);
+            assertEquals(e.getCharPositionInLine(), a.getCharPositionInLine(), "Token char position mismatch at index " + i);
+            assertEquals(e.getStartIndex(), a.getStartIndex(), "Token start index mismatch at index " + i);
+            assertEquals(e.getStopIndex(), a.getStopIndex(), "Token stop index mismatch at index " + i);
+        }
+    }
+
+
+
 
     /**
      * Returns canonical path for the file with the given file name.

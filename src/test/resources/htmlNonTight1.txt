@@ -2,50 +2,45 @@
    |- mainDescription
    |  |- TOKEN[type: 4, text: This method does something important.]
    |  |- TOKEN[type: 3, text: \n]
-   |  '- htmlElement
-   |     |- htmlTagStart
-   |     |  |- TOKEN[type: 21, text: <]
-   |     |  |- TOKEN[type: 26, text: p]
-   |     |  '- TOKEN[type: 22, text: >]
-   |     |- htmlContent
-   |     |  |- TOKEN[type: 3, text: \n]
-   |     |  |- TOKEN[type: 4, text: This is a normal paragraph]
-   |     |  |- TOKEN[type: 3, text: \n]
-   |     |  |- TOKEN[type: 3, text: \n]
-   |     |  |- TOKEN[type: 4, text: Here's a list of features:]
-   |     |  |- TOKEN[type: 3, text: \n]
-   |     |  '- htmlElement
-   |     |     |- htmlTagStart
-   |     |     |  |- TOKEN[type: 21, text: <]
-   |     |     |  |- TOKEN[type: 26, text: ul]
-   |     |     |  '- TOKEN[type: 22, text: >]
-   |     |     |- htmlContent
-   |     |     |  |- TOKEN[type: 3, text: \n]
-   |     |     |  '- htmlElement
-   |     |     |     |- htmlTagStart
-   |     |     |     |  |- TOKEN[type: 21, text: <]
-   |     |     |     |  |- TOKEN[type: 26, text: li]
-   |     |     |     |  '- TOKEN[type: 22, text: >]
-   |     |     |     |- htmlContent
-   |     |     |     |  |- TOKEN[type: 4, text: Feature one]
-   |     |     |     |  |- TOKEN[type: 3, text: \n]
-   |     |     |     |  '- htmlElement
-   |     |     |     |     |- htmlTagStart
-   |     |     |     |     |  |- TOKEN[type: 21, text: <]
-   |     |     |     |     |  |- TOKEN[type: 26, text: li]
-   |     |     |     |     |  '- TOKEN[type: 22, text: >]
-   |     |     |     |     |- htmlContent
-   |     |     |     |     |  |- TOKEN[type: 4, text: Feature two]
-   |     |     |     |     |  '- TOKEN[type: 3, text: \n]
-   |     |     |     |     '- htmlTagEnd
-   |     |     |     |        |- TOKEN[type: 21, text: <]
-   |     |     |     |        |- TOKEN[type: 24, text: /]
-   |     |     |     |        |- TOKEN[type: 26, text: ul]
-   |     |     |     |        '- TOKEN[type: 22, text: >]
-   |     |     |     '- [174 166 197 173 166 197 173 166 64 52]
-   |     |     |        '- [174 166 197 173 166 197 173 166 64 52]
-   |     |     '- htmlTagEnd
-   |     |        '- TOKEN[type: -1, text: <EOF>]
-   |     '- htmlTagEnd
-   |        '- TOKEN[type: -1, text: <EOF>]
+   |  '- htmlElementList
+   |     |- htmlElementList
+   |     |  |- htmlTagStart
+   |     |  |  |- TOKEN[type: 21, text: <]
+   |     |  |  |- TOKEN[type: 26, text: p]
+   |     |  |  '- TOKEN[type: 22, text: >]
+   |     |  '- nonTightHtmlContent
+   |     |     |- TOKEN[type: 3, text: \n]
+   |     |     |- TOKEN[type: 4, text: This is a normal paragraph]
+   |     |     |- TOKEN[type: 3, text: \n]
+   |     |     |- TOKEN[type: 3, text: \n]
+   |     |     |- TOKEN[type: 4, text: Here's a list of features:]
+   |     |     '- TOKEN[type: 3, text: \n]
+   |     '- htmlElement
+   |        |- htmlTagStart
+   |        |  |- TOKEN[type: 21, text: <]
+   |        |  |- TOKEN[type: 26, text: ul]
+   |        |  '- TOKEN[type: 22, text: >]
+   |        |- htmlContent
+   |        |  |- TOKEN[type: 3, text: \n]
+   |        |  |- htmlElement
+   |        |  |  |- htmlTagStart
+   |        |  |  |  |- TOKEN[type: 21, text: <]
+   |        |  |  |  |- TOKEN[type: 26, text: li]
+   |        |  |  |  '- TOKEN[type: 22, text: >]
+   |        |  |  '- nonTightHtmlContent
+   |        |  |     |- TOKEN[type: 4, text: Feature one]
+   |        |  |     '- TOKEN[type: 3, text: \n]
+   |        |  '- htmlElement
+   |        |     |- htmlTagStart
+   |        |     |  |- TOKEN[type: 21, text: <]
+   |        |     |  |- TOKEN[type: 26, text: li]
+   |        |     |  '- TOKEN[type: 22, text: >]
+   |        |     '- nonTightHtmlContent
+   |        |        |- TOKEN[type: 4, text: Feature two]
+   |        |        '- TOKEN[type: 3, text: \n]
+   |        '- htmlTagEnd
+   |           |- TOKEN[type: 21, text: <]
+   |           |- TOKEN[type: 24, text: /]
+   |           |- TOKEN[type: 26, text: ul]
+   |           '- TOKEN[type: 22, text: >]
    '- TOKEN[type: -1, text: <EOF>]

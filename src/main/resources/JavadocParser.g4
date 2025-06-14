@@ -19,12 +19,41 @@ import java.util.Set;
         String tagName = _input.LT(2).getText();
         return VOID_TAGS.contains(tagName.toLowerCase());
     }
+
+    private List<Token> unclosedTagNameTokens;
+
+	public JavadocParser(CommonTokenStream tokens, List<Token> unclosed) {
+		super(tokens);
+		_interp = new ParserATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
+		this.unclosedTagNameTokens = unclosed;
+	}
+
+    private boolean isNonTightTag() {
+        final Token lookahead = _input.LT(2);
+        for (Token token : unclosedTagNameTokens) {
+            if (tokensEqual(lookahead, token)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean tokensEqual(Token t1, Token t2) {
+        if (t1 == t2) return true;
+        if (t1 == null || t2 == null) return false;
+
+        return t1.getType() == t2.getType()
+            && t1.getText().equals(t2.getText())
+            && t1.getLine() == t2.getLine()
+            && t1.getTokenIndex() == t2.getTokenIndex()
+            && t1.getCharPositionInLine() == t2.getCharPositionInLine();
+    }
+
 }
 
 javadoc
     : mainDescription (blockTag)* EOF;
 
-mainDescription: (NEWLINE | TEXT | inlineTag | htmlElement)*;
 
 inlineTag
     : JAVADOC_INLINE_TAG_START
@@ -73,22 +102,29 @@ customBlockTag: CUSTOM_NAME description;
 
 description : (TEXT | NEWLINE |inlineTag)+ ;
 
+mainDescription: (NEWLINE | TEXT | inlineTag | htmlElement)*;
 
 htmlElement
     : voidElement
-    | normalElement
+    | selfClosingElement
+    | {!isNonTightTag()}? tight
+    | {isNonTightTag()}? nonTight
     ;
 
 voidElement
     : {isVoidTag()}? htmlTagStart
     ;
 
-normalElement
-    : htmlTagStart htmlContent htmlTagEnd
+
+tight: htmlTagStart htmlContent htmlTagEnd;
+nonTight: htmlTagStart nonTightHtmlContent;
+
+selfClosingElement
+    : TAG_OPEN TAG_NAME (htmlAttribute)* TAG_SLASH_CLOSE
     ;
 
 htmlTagStart
-    : TAG_OPEN TAG_NAME (htmlAttribute)* (TAG_SLASH_CLOSE | TAG_CLOSE)
+    : TAG_OPEN TAG_NAME (htmlAttribute)* TAG_CLOSE
     ;
 
 htmlTagEnd
@@ -96,9 +132,13 @@ htmlTagEnd
     ;
 
 htmlAttribute
-    : TAG_NAME (TAG_EQUALS ATTRIBUTE_VALUE)?
+    : TAG_ATTR_NAME (TAG_EQUALS ATTRIBUTE_VALUE)?
     ;
 
 htmlContent
-    : (TEXT | htmlElement | inlineTag | NEWLINE)*
+    : (TEXT | htmlElement | inlineTag | NEWLINE)+
+    ;
+
+nonTightHtmlContent
+    : (TEXT | inlineTag | NEWLINE)+
     ;
